@@ -58,6 +58,21 @@ for i in borderline:
 results = HERE / "results"
 results.mkdir(exist_ok=True)   # create the folder if it doesn't exist yet
 
+# --- What did the 8 ms dead time remove? ---
+from spike_detection import detect_onsets   # if not already imported at the top
+
+all_onsets = detect_onsets(flat, 4.5 * sigma)            # every crossing, before dead time
+dropped = np.setdiff1d(all_onsets, spikes_8)              # crossings the dead time removed
+print(f"\nCrossings removed by the 8 ms dead time: {len(dropped)}")
+for i in dropped:
+    prev = spikes_8[spikes_8 < i].max()                   # the kept spike just before it
+    peak = flat[i:i + 5].max() / sigma
+    print(f"  t = {t[i]:.3f} s, {(i - prev) / fs * 1000:.0f} ms after a kept spike, peak {peak:.1f} sigma")
+
+    
+
+
+
 fig, axes = plt.subplots(2, 1, figsize=(14, 7), sharex=True)
 
 axes[0].plot(t, raw, linewidth=0.5, color="gray")
