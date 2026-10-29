@@ -42,7 +42,7 @@ print(f"\nSmallest gap between spikes (8 ms dead time): {gaps_ms.min():.0f} ms")
 flat = remove_drift(raw, fs)
 sigma = estimate_noise(flat)
 
-spikes_main = detect_spikes(raw, fs, alpha=4.5)
+spikes_main = detect_spikes(raw, fs, alpha=4.5, dead_time_s=0.005)
 spikes_strict = detect_spikes(raw, fs, alpha=6.0)
 
 tol = 3   # samples: the same spike can cross slightly earlier at a lower threshold
@@ -69,7 +69,6 @@ for i in dropped:
     peak = flat[i:i + 5].max() / sigma
     print(f"  t = {t[i]:.3f} s, {(i - prev) / fs * 1000:.0f} ms after a kept spike, peak {peak:.1f} sigma")
 
-    
 
 
 
