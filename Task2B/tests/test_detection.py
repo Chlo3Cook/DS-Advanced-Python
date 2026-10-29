@@ -1,34 +1,54 @@
 import numpy as np
-from spike_detection import detect_onsets, remove_drift, estimate_noise, apply_dead_time
+import pytest
+from spike_detection import (detect_onsets, detect_onsets_numpy,
+                             remove_drift, estimate_noise, apply_dead_time)
 
-def test_no_samples_above_threshold_gives_zero_events():
+# Both versions of the onset detector; each onset test runs on both.
+ONSET_VERSIONS = [detect_onsets, detect_onsets_numpy]
+
+
+# --- Onset detection: run on both the loop and the NumPy version ---
+
+@pytest.mark.parametrize("detect", ONSET_VERSIONS)
+def test_no_samples_above_threshold_gives_zero_events(detect):
     signal = np.array([0.0, 0.5, 1.0, 0.2])
-    events = detect_onsets(signal, threshold=1.5)
+    events = detect(signal, threshold=1.5)
     assert len(events) == 0
 
-def test_one_isolated_sample_gives_one_event():
+
+@pytest.mark.parametrize("detect", ONSET_VERSIONS)
+def test_one_isolated_sample_gives_one_event(detect):
     signal = np.array([0.0, 0.0, 3.0, 0.0, 0.0])
-    events = detect_onsets(signal, threshold=1.5)
+    events = detect(signal, threshold=1.5)
     assert len(events) == 1
     assert list(events) == [2]
 
-def test_consecutive_samples_above_count_as_one_event():
+
+@pytest.mark.parametrize("detect", ONSET_VERSIONS)
+def test_consecutive_samples_above_count_as_one_event(detect):
     signal = np.array([0.0, 3.0, 4.0, 2.0, 0.0, 0.0])
-    events = detect_onsets(signal, threshold=1.5)
+    events = detect(signal, threshold=1.5)
     assert len(events) == 1
     assert list(events) == [1]
 
-def test_two_separate_intervals_give_two_events():
+
+@pytest.mark.parametrize("detect", ONSET_VERSIONS)
+def test_two_separate_intervals_give_two_events(detect):
     signal = np.array([0.0, 3.0, 3.0, 0.0, 0.0, 4.0, 0.0])
-    events = detect_onsets(signal, threshold=1.5)
+    events = detect(signal, threshold=1.5)
     assert len(events) == 2
     assert list(events) == [1, 5]
 
-def test_signal_starting_above_threshold_detects_event_at_start():
+
+@pytest.mark.parametrize("detect", ONSET_VERSIONS)
+def test_signal_starting_above_threshold_detects_event_at_start(detect):
     signal = np.array([3.0, 3.0, 0.0, 0.0, 0.0])
-    events = detect_onsets(signal, threshold=1.5)
+    events = detect(signal, threshold=1.5)
     assert len(events) == 1
     assert list(events) == [0]
+
+
+# --- The other detector steps: one version each ---
 
 def test_dead_time_drops_onsets_closer_than_dead_time():
     onsets = np.array([10, 13, 30])           # 13 is only 3 ms after 10

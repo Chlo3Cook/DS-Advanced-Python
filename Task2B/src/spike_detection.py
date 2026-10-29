@@ -62,3 +62,15 @@ def detect_spikes(raw, fs, window_s=0.2, alpha=4.5, dead_time_s=0.008):
     threshold = alpha * sigma
     onsets = detect_onsets(flat, threshold)
     return apply_dead_time(onsets, fs, dead_time_s)
+
+def detect_onsets_numpy(signal, threshold):
+    """Vectorized version of detect_onsets: same rule, no Python loop.
+
+    An onset is a sample above the threshold whose previous sample is not above it,
+    or the first sample if it is above.
+    """
+    above = signal > threshold                    # True/False for every sample at once
+    onset = np.zeros_like(above)                  # start with all False, same length
+    onset[0:1] = above[0:1]                       # first sample: onset if it's above
+    onset[1:] = above[1:] & ~above[:-1]           # rest: above now AND NOT above before
+    return np.flatnonzero(onset)                  # indices where onset is True
