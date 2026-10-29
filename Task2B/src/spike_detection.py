@@ -52,7 +52,7 @@ def apply_dead_time(onsets, fs, dead_time_s=0.005):
     return np.array(kept, dtype=int)
 
 
-def detect_spikes(raw, fs, window_s=0.2, alpha=4.5, dead_time_s=0.005):
+def detect_spikes(raw, fs, window_s=0.2, alpha=4.5, dead_time_s=0.008):
     """Full detector: remove drift, estimate noise, threshold, find onsets, apply dead time.
 
     Returns the sample indices of detected spikes (onset of each above-threshold run).

@@ -17,7 +17,7 @@ raw = data["raw_data"]
 fs = 1 / np.median(np.diff(t))
 duration = len(t) / fs
 
-# Run the detector with the 2A settings (window 0.2 s, alpha 4.5, dead time 5 ms)
+# Run the detector with the 2A settings (window 0.2 s, alpha 4.5, dead time 8 ms)
 spikes = detect_spikes(raw, fs)
 n_spikes = len(spikes)
 rate = n_spikes / duration
@@ -26,12 +26,17 @@ print(f"Sampling rate: {fs:.0f} Hz, duration: {duration:.1f} s")
 print(f"Spikes detected: {n_spikes}")
 print(f"Firing rate: {rate:.2f} Hz")
 
-# Sensitivity: how does the count change with alpha?
-print("\nalpha   spikes   rate (Hz)")
-for alpha in [3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 7.0]:
-    n = len(detect_spikes(raw, fs, alpha=alpha))
-    print(f"{alpha:5.1f}   {n:6d}   {n / duration:8.2f}")
 
+# Sensitivity: how does the count change with alpha and dead time?
+print("\nalpha   spikes (5 ms)   spikes (8 ms)   rate 8 ms (Hz)")
+for alpha in [3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 7.0]:
+    n5 = len(detect_spikes(raw, fs, alpha=alpha, dead_time_s=0.005))
+    n8 = len(detect_spikes(raw, fs, alpha=alpha, dead_time_s=0.008))
+    print(f"{alpha:5.1f}   {n5:13d}   {n8:13d}   {n8 / duration:14.2f}")
+
+spikes_8 = detect_spikes(raw, fs)            # default settings: alpha 4.5, dead time 8 ms
+gaps_ms = np.diff(t[spikes_8]) * 1000
+print(f"\nSmallest gap between spikes (8 ms dead time): {gaps_ms.min():.0f} ms")
 
 # --- Borderline events: found at alpha 4.5 but not at alpha 6 ---
 flat = remove_drift(raw, fs)
@@ -79,7 +84,8 @@ plt.show()
 clear = spikes_strict[np.argmin(np.abs(t[spikes_strict] - 4.69))]   # the clear spike near 4.69 s (Figure C in 2A)
 to_show = [("Clear spike", clear)] + [("Borderline", i) for i in borderline]
 
-fig, axes = plt.subplots(1, len(to_show), figsize=(14, 4))
+fig, axes = plt.subplots(1, len(to_show), figsize=(14, 4), squeeze=False)
+axes = axes[0]
 half = int(0.015 * fs)   # ±15 ms around each event
 
 for ax, (label, i) in zip(axes, to_show):
